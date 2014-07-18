@@ -1,20 +1,176 @@
 # Reproducible Research: Peer Assessment 1
-
+* * *
 
 ## Loading and preprocessing the data
+```{r}
+if (!file.exists("activity.csv")) {
+  if (!file.exists("activity.zip")) {
+    stop("Please make sure the file 'activity.csv' or 'activity.zip' file is in the working directory")
+  } else {
+    unzip("activity.zip")
+  }
+}
 
+activity <- read.csv("activity.csv", colClasses=c(NA,"Date",NA))
 
+```
+Checking the loaded data
+```{r}
+head(activity)
+```
+
+Checking the dimension of the data
+```{r}
+dim(activity)
+```
+
+Check the structure of the data
+```{r}
+str(activity)
+```
+Checking the summary of the data
+```{r}
+summary(activity)
+```
+There are `r dim(activity)[1]` records and `r dim(activity)[2]` variables. The data contain `r sum(!complete.cases(activity))` missing values.
 
 ## What is mean total number of steps taken per day?
+Preparing the data to answer the question
 
+Ignoring the missing values(Removing missing velues)
 
+```{r}
+activity_nona <- activity[complete.cases(activity),]
+head(activity_nona)
+```
+
+There are `r dim(activity_nona)[1]` complete cases
+
+Using the package plyr to format and summarize.
+
+```{r}
+##Checking if the package plyr exist and if not to install it
+if(require("plyr")){
+  print("plyr is loaded correctly")
+} else {
+  print("trying to install plyr")
+  install.packages("plyr")
+  if(require(plyr)){
+    print("plyr installed and loaded")
+  } else {
+    stop("could not install plyr")
+  }
+}
+```
+
+Transforming the data
+
+```{r}
+total_steps_day_nona <- ddply(activity_nona, .(date), summarise,
+                      total_s = sum(steps))
+```
+#### 1. Histogram of the total number of steps taken each day
+```{r}
+hist(total_steps_day_nona$total_s, 
+     main = "Total number of steps taken each day",
+     xlab = "Total Steps", col="green")
+```
+
+#### 2. To Calculate and report the mean and median total number of steps taken per day
+
+```{r}
+summary(total_steps_day_nona)
+
+```
+
+The `r summary(total_steps_day_nona)[4,2]` and `r summary(total_steps_day_nona)[3,2]`
 
 ## What is the average daily activity pattern?
 
+#### 1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
+```{r}
+average_steps_day_nona <- ddply(activity_nona, .(interval), 
+                           summarise,
+                         average_s = mean(steps))
+head(average_steps_day_nona)
+```
+
+```{r}
+with(data=average_steps_day_nona, 
+      plot(interval, average_s, type="l",
+      main = "Mean Total Number of Steps Taken per Day",
+      ylab = "Average Steps"))
+```
+
+#### 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+```{r}
+##Finding the maximum value
+mx <- max(average_steps_day_nona$average_s)
+
+##Locating the 5-minute interval which contains the maximum number of steps
+interval <- average_steps_day_nona[average_steps_day_nona$average_s==mx,1]
+interval
+```
+
+The 5-minute interval which contains the maximum number of steps is `r average_steps_day_nona[average_steps_day_nona$average_s==mx,1]`
 
 ## Imputing missing values
 
+#### 1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+```{r}
+##The total number of missing values in the dataset
+sum(!complete.cases(activity))
+```
 
+#### 2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+Using the mean for the particular 5-minute interval to fill the particular missing value
+
+#### 3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+Using impute() from package Hmisc and ddply from package plyr
+
+
+```{r}
+##Loading the Hmisc package and if is not going to be found it will be get installed
+if(require("Hmisc")){
+  print("Hmisc is loaded correctly")
+} else {
+  print("trying to install Hmisc")
+  install.packages("Hmisc")
+  if(require(Hmisc)){
+    print("Hmisc installed and loaded")
+  } else {
+    stop("could not install Hmisc")
+  }
+}
+```
+
+Imputing
+```{r}
+activity_imp <- ddply(activity, "interval", mutate, imputed.steps = impute(steps, mean))
+#Selecting the columns of interest and ordering them using order function
+activity_imp <- activity_imp[order(activity_imp$date),c(4,2,3)]
+dim(activity_imp)
+head(activity_imp)
+```
+
+#### 4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+Preparing the data
+
+```{r}
+imp_total_steps_day <- ddply(activity_imp, .(date), summarise,
+                         imp_total_s = sum(imputed.steps))
+head(imp_total_steps_day)
+summary(imp_total_steps_day$imp_total_s)
+```
+Ploting the histogram
+```{r}
+##Histogram of the total number of steps taken each day
+hist(imp_total_steps_day$imp_total_s,
+     main = "Total number of steps taken each day for Imputed Data",
+     xlab = "Total Steps")
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?

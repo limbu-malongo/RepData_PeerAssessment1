@@ -1,0 +1,22 @@
+{
+    "contents" : "",
+    "created" : 1405357845766.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "5F91F679",
+    "lastKnownWriteTime" : 578055781,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "caption" : "mean_steps_day",
+        "contentUrl" : "content?title=mean_steps_day&file=4652664e171a4ee4a70dd2335f5692e9.htm",
+        "displayedObservations" : "61",
+        "displayedVariables" : 2,
+        "totalObservations" : "61",
+        "variables" : "2"
+    },
+    "source_on_save" : false,
+    "type" : "r_dataframe"
+}

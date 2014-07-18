@@ -1,0 +1,17 @@
+{
+    "contents" : "#Checking if the file activity.csv or activity.zip exist in the working directory\n#If all of them are missing then it will print the message\n#If only \"activity.zip\" is found it will be unzipped\n\nif (!file.exists(\"activity.csv\")) {\n  if (!file.exists(\"activity.zip\")) {\n    stop(\"Please make sure the file \"activity.csv\"\" or \"activity.zip\" file is in the working directory\")\n  } else {\n    unzip(\"activity.zip\")\n  }\n}\n\n#Loading the data\nactivity <- read.csv(\"activity.csv\", colClasses=c(NA,\"Date\",NA))\n\n#Check the structure of the data\nstr(activity)\n\n\n#The codes below will check if the package is installed and load, and if it is not installed it is going \n#download plyr, install and load it\n#\nif(require(\"plyr\")){\n  print(\"plyr is loaded correctly\")\n} else {\n  print(\"trying to install plyr\")\n  install.packages(\"plyr\")\n  if(require(plyr)){\n    print(\"plyr installed and loaded\")\n  } else {\n    stop(\"could not install plyr\")\n  }\n}\n\nmean_steps_day <- ddply(activity, .(date), summarise,\n                        mean = mean(steps, na.rm=T))\n\n#The mean total number of steps taken per day\nmean(mean_steps_day$mean, na.rm=T)\n\n#Histogram of the total number of steps taken each day\nhist(mean_steps_day$mean)\n\n\n#The mean and median total number of steps taken per day\nmean_median_steps_day <- ddply(activity, .(date), summarise,\n                        mean = mean(steps, na.rm=T) ,  \n                        median = median(steps))",
+    "created" : 1405354851793.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2519484261",
+    "id" : "9561741C",
+    "lastKnownWriteTime" : 1405367309,
+    "path" : "C:/Users/Admin/datasciencecoursera/RepData_PeerAssessment1/run_analyis.R",
+    "project_path" : "run_analyis.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}

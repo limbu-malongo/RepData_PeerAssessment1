@@ -1,0 +1,214 @@
+---
+title: "Reproducible Research Peer Assignment 1"
+---
+## Loading and preprocessing the data
+
+To Process/transform the data into a format suitable for analysis
+
+```{r}
+if (!file.exists("activity.csv")) {
+  if (!file.exists("activity.zip")) {
+    stop("Please make sure the file 'activity.csv' or 'activity.zip' file is in the working directory")
+  } else {
+    unzip("activity.zip")
+  }
+}
+```
+
+Loading the data while taking care of the date column to be loaded as Date class
+
+```{r}
+activity <- read.csv("activity.csv", colClasses=c(NA,"Date",NA))
+```
+
+Checking the loaded data
+```{r}
+head(activity)
+```
+
+Checking the dimension of the data
+```{r}
+dim(activity)
+```
+
+Check the structure of the data
+```{r}
+str(activity)
+```
+
+```{r}
+summary(activity)
+```
+
+There are `r dim(activity)[1]` records and `r dim(activity)[2]` variables. The data contain `r sum(is.na(activity))` missing values.
+
+## What is mean total number of steps taken per day?
+
+For this part of the assignment, we are told we can ignore the missing values in the dataset, so I decided to create a data set which contain complete cases only.
+
+```{r}
+activity_nona <- activity[complete.cases(activity),]
+```
+
+```{r}
+head(activity_nona)
+dim(activity_nona)[1]
+```
+There are 15264 complete cases
+
+### 1. Histogram of the total number of steps taken each day
+
+Using the package plyr to format and summarize so that we can use to create the histogram.
+
+Checking if the package plyr exist and if not to install it
+
+```{r}
+if(require("plyr")){
+  print("plyr is loaded correctly")
+} else {
+  print("trying to install plyr")
+  install.packages("plyr")
+  if(require(plyr)){
+    print("plyr installed and loaded")
+  } else {
+    stop("could not install plyr")
+  }
+}
+```
+
+Transforming the data
+
+```{r}
+total_steps_day_nona <- ddply(activity_nona, .(date), summarise,
+                      total_s = sum(steps))
+```
+
+**Histogram of the total number of steps taken each day**
+```{r}
+hist(total_steps_day_nona$total_s, 
+     main = "Total number of steps taken each day",
+     xlab = "Total Steps")
+```
+
+### 2. To Calculate and report the mean and median total number of steps taken per day
+
+```{r}
+summary(total_steps_day_nona)
+```
+**The mean is 10766 and median is 10765**
+
+## What is the average daily activity pattern?
+
+### 1. Making a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+
+```{r}
+average_steps_day_nona <- ddply(activity_nona, .(interval), 
+                           summarise,
+                         average_s = mean(steps))
+head(average_steps_day_nona)
+```
+
+```{r}
+with(data=average_steps_day_nona, 
+      plot(interval, average_s, type="l",
+      main = "mean total number of steps taken per day",
+      ylab = "Average Steps"))
+```
+
+### 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+```{r}
+mx <- max(average_steps_day_nona$average_s)
+#ttt <- average_steps_day_nona[average_steps_day_nona$average_s==mx,]
+ttt <- average_steps_day_nona[average_steps_day_nona$average_s==mx,1]
+ttt
+```
+Denoting it on the plot with a vertical line
+```{r}
+with(data=average_steps_day_nona, 
+      plot(interval, average_s, type="l",
+      main = "mean total number of steps taken per day",
+      ylab = "Average Steps"))
+
+abline(v=max(average_steps_day_nona[average_steps_day_nona$average_s==mx,1]),col="blue") 
+```
+
+## Imputing missing values
+ 
+ There are a number of days/intervals where there are missing values(coded as NA). The presence of missing days may introduce bias into some calculations or summaries of the data.
+ 
+### 1. To calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+ 
+```{r}
+ sum(is.na(activity))
+ ```
+
+### 2. To Devise a strategy for filling in all of the missing values in the dataset
+
+We are going to  use the mean for that 5-minute interval to fill the particular missing value
+
+### 3. To Create a new dataset that is equal to the original dataset but with the missing data filled in
+
+Using impute() from package Hmisc and ddply from package plyr
+
+Loading the Hmisc package and if is not going to be found it will be installed
+
+```{r}
+if(require("Hmisc")){
+  print("Hmisc is loaded correctly")
+} else {
+  print("trying to install Hmisc")
+  install.packages("Hmisc")
+  if(require(Hmisc)){
+    print("Hmisc installed and loaded")
+  } else {
+    stop("could not install Hmisc")
+  }
+}
+```
+
+Imputing
+```{r}
+activity_imp <- ddply(activity, "interval", mutate, imputed.steps = impute(steps, mean))
+activity_imp <- activity_imp[order(activity_imp$date),c(4,2,3)]
+dim(activity_imp)
+head(activity_imp)
+```
+
+### 4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+**Histogram of the total number of steps taken each day**
+
+Preparing the data
+
+```{r}
+imp_total_steps_day <- ddply(activity_imp, .(date), summarise,
+                         imp_total_s = sum(imputed.steps))
+head(imp_total_steps_day)
+summary(imp_total_steps_day$imp_total_s)
+```
+Ploting the histogram
+```{r}
+##Histogram of the total number of steps taken each day
+hist(imp_total_steps_day$imp_total_s,
+     main = "Total number of steps taken each day for Imputed Data",
+     xlab = "Total Steps")
+```
+
+**Mean and median total number of steps taken per day**
+
+```{r}
+summary(imp_total_steps_day)
+    
+```
+
+The mean is 10766 and the median is 10766 (the previous, the meas was 10766 and median was 10765)
+
+**Do these values differ from the estimates from the first part of the assignment?**
+
+No, they do not differ!
+
+
+**What is the impact of imputing missing data on the estimates of the total daily number of steps?**
+
+The size of the total records used for analysis is the smae as the loaded data, there is no records which have been removed.
