@@ -1,5 +1,6 @@
 # Reproducible Research: Peer Assessment 1
 * * *
+* * *
 
 ## Loading and preprocessing the data
 
@@ -112,10 +113,6 @@ if(require("plyr")){
 ```
 
 ```
-## Loading required package: plyr
-```
-
-```
 ## [1] "plyr is loaded correctly"
 ```
 
@@ -134,7 +131,7 @@ hist(total_steps_day_nona$total_s,
      xlab = "Total Steps", col="green")
 ```
 
-![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9.png) 
+![plot of chunk plot1](figure/plot1.png) 
 
 #### 2. To Calculate and report the mean and median total number of steps taken per day
 
@@ -181,11 +178,12 @@ head(average_steps_day_nona)
 ```r
 with(data=average_steps_day_nona, 
       plot(interval, average_s, type="l",
+      col = "blue",
       main = "Mean Total Number of Steps Taken per Day",
       ylab = "Average Steps"))
 ```
 
-![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12.png) 
+![plot of chunk plot2](figure/plot2.png) 
 
 #### 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
@@ -239,25 +237,6 @@ if(require("Hmisc")){
     stop("could not install Hmisc")
   }
 }
-```
-
-```
-## Loading required package: Hmisc
-## Loading required package: grid
-## Loading required package: lattice
-## Loading required package: survival
-## Loading required package: splines
-## Loading required package: Formula
-## 
-## Attaching package: 'Hmisc'
-## 
-## The following objects are masked from 'package:plyr':
-## 
-##     is.discrete, summarize
-## 
-## The following objects are masked from 'package:base':
-## 
-##     format.pval, round.POSIXt, trunc.POSIXt, units
 ```
 
 ```
@@ -326,9 +305,148 @@ Ploting the histogram
 ##Histogram of the total number of steps taken each day
 hist(imp_total_steps_day$imp_total_s,
      main = "Total number of steps taken each day for Imputed Data",
-     xlab = "Total Steps")
+     xlab = "Total Steps",
+     col = "yellow")
 ```
 
-![plot of chunk unnamed-chunk-18](figure/unnamed-chunk-18.png) 
+![plot of chunk plot3](figure/plot3.png) 
+
+Mean and median total number of steps taken per day
+
+```r
+summary(imp_total_steps_day)
+```
+
+```
+##       date             imp_total_s   
+##  Min.   :2012-10-01   Min.   :   41  
+##  1st Qu.:2012-10-16   1st Qu.: 9819  
+##  Median :2012-10-31   Median :10766  
+##  Mean   :2012-10-31   Mean   :10766  
+##  3rd Qu.:2012-11-15   3rd Qu.:12811  
+##  Max.   :2012-11-30   Max.   :21194
+```
+
+The Mean   :10766   and Median :10766  
+
+Do these values differ from the estimates from the first part of the assignment?
+
++ Before imputing - Mean   :10766   and Median :10765  
+
++ After imputing - Mean   :10766   and Median :10766  
+
++ The means and medians values before and after imputing are almost the same
+
+What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
++ The imputed data has more records
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+#### 1. Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
+
+```r
+head(activity_imp)
+```
+
+```
+##     imputed.steps       date interval
+## 1         1.71698 2012-10-01        0
+## 62        0.33962 2012-10-01        5
+## 123       0.13208 2012-10-01       10
+## 184       0.15094 2012-10-01       15
+## 245       0.07547 2012-10-01       20
+## 306       2.09434 2012-10-01       25
+```
+
+```r
+activity_imp_day <- activity_imp
+
+for (i in 1:dim(activity_imp_day)[1])
+  if (weekdays(activity_imp_day[i,2]) %in% c("Saturday","Sunday")){
+      activity_imp_day[i, "day"] = "Weekend"
+    } else{
+        activity_imp_day[i, "day"] = "Weekday"
+      }
+
+head(activity_imp_day)
+```
+
+```
+##     imputed.steps       date interval     day
+## 1         1.71698 2012-10-01        0 Weekday
+## 62        0.33962 2012-10-01        5 Weekday
+## 123       0.13208 2012-10-01       10 Weekday
+## 184       0.15094 2012-10-01       15 Weekday
+## 245       0.07547 2012-10-01       20 Weekday
+## 306       2.09434 2012-10-01       25 Weekday
+```
+
+```r
+table(activity_imp_day[,4])
+```
+
+```
+## 
+## Weekday Weekend 
+##   12960    4608
+```
+
+#### 2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
+
+
+Averaging across all weekday days or weekend days
+
+```r
+average_steps_imp_day <- ddply(activity_imp_day, .(interval,day), 
+                                summarise,
+                                average_s = mean(imputed.steps))
+head(average_steps_imp_day)
+```
+
+```
+##   interval     day average_s
+## 1        0 Weekday   2.25115
+## 2        0 Weekend   0.21462
+## 3        5 Weekday   0.44528
+## 4        5 Weekend   0.04245
+## 5       10 Weekday   0.17317
+## 6       10 Weekend   0.01651
+```
+
+Using the package ggplot2
+
+```r
+##Loading the ggplot2 package and if is not going to be found it will be get installed
+if(require("ggplot2")){
+  print("ggplot2 is loaded correctly")
+} else {
+  print("trying to install ggplot2")
+  install.packages("ggplot2")
+  if(require(ggplot2)){
+    print("ggplot2 installed and loaded")
+  } else {
+    stop("could not install ggplot2")
+  }
+}
+```
+
+```
+## [1] "ggplot2 is loaded correctly"
+```
+
+Ploting
+
+
+```r
+ggplot(data=average_steps_imp_day, aes(x=interval, 
+                      y=average_s, 
+                      group=day, 
+                      colour=day)) + 
+  geom_line() + 
+  facet_wrap(~ day, ncol=1) +
+  labs(title="The Average Number of Steps Taken") +
+  labs(x="Interval",y="Average Steps")
+```
+
+![plot of chunk plot4](figure/plot4.png) 
