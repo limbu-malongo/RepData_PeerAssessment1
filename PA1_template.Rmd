@@ -1,5 +1,6 @@
 # Reproducible Research: Peer Assessment 1
 * * *
+* * *
 
 ## Loading and preprocessing the data
 ```{r}
@@ -70,7 +71,7 @@ total_steps_day_nona <- ddply(activity_nona, .(date), summarise,
                       total_s = sum(steps))
 ```
 #### 1. Histogram of the total number of steps taken each day
-```{r}
+```{r plot1}
 hist(total_steps_day_nona$total_s, 
      main = "Total number of steps taken each day",
      xlab = "Total Steps", col="green")
@@ -96,9 +97,10 @@ average_steps_day_nona <- ddply(activity_nona, .(interval),
 head(average_steps_day_nona)
 ```
 
-```{r}
+```{r plot2}
 with(data=average_steps_day_nona, 
       plot(interval, average_s, type="l",
+      col = "blue",
       main = "Mean Total Number of Steps Taken per Day",
       ylab = "Average Steps"))
 ```
@@ -166,11 +168,93 @@ head(imp_total_steps_day)
 summary(imp_total_steps_day$imp_total_s)
 ```
 Ploting the histogram
-```{r}
+```{r plot3}
 ##Histogram of the total number of steps taken each day
 hist(imp_total_steps_day$imp_total_s,
      main = "Total number of steps taken each day for Imputed Data",
-     xlab = "Total Steps")
+     xlab = "Total Steps",
+     col = "yellow")
 ```
 
+Mean and median total number of steps taken per day
+```{r}
+summary(imp_total_steps_day)
+
+```
+
+The `r summary(imp_total_steps_day)[4,2]` and `r summary(imp_total_steps_day)[3,2]`
+
+Do these values differ from the estimates from the first part of the assignment?
+
++ Before imputing - `r summary(total_steps_day_nona)[4,2]` and `r summary(total_steps_day_nona)[3,2]`
+
++ After imputing - `r summary(imp_total_steps_day)[4,2]` and `r summary(imp_total_steps_day)[3,2]`
+
++ The means and medians values before and after imputing are almost the same
+
+What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
++ The imputed data has more records
+
 ## Are there differences in activity patterns between weekdays and weekends?
+
+#### 1. Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
+```{r}
+head(activity_imp)
+
+activity_imp_day <- activity_imp
+
+for (i in 1:dim(activity_imp_day)[1])
+  if (weekdays(activity_imp_day[i,2]) %in% c("Saturday","Sunday")){
+      activity_imp_day[i, "day"] = "Weekend"
+    } else{
+        activity_imp_day[i, "day"] = "Weekday"
+      }
+
+head(activity_imp_day)
+table(activity_imp_day[,4])
+```
+
+#### 2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
+
+
+Averaging across all weekday days or weekend days
+```{r}
+
+average_steps_imp_day <- ddply(activity_imp_day, .(interval,day), 
+                                summarise,
+                                average_s = mean(imputed.steps))
+head(average_steps_imp_day)
+
+```
+
+Using the package ggplot2
+```{r}
+##Loading the ggplot2 package and if is not going to be found it will be get installed
+if(require("ggplot2")){
+  print("ggplot2 is loaded correctly")
+} else {
+  print("trying to install ggplot2")
+  install.packages("ggplot2")
+  if(require(ggplot2)){
+    print("ggplot2 installed and loaded")
+  } else {
+    stop("could not install ggplot2")
+  }
+}
+```
+
+Ploting
+
+```{r plot4}
+
+ggplot(data=average_steps_imp_day, aes(x=interval, 
+                      y=average_s, 
+                      group=day, 
+                      colour=day)) + 
+  geom_line() + 
+  facet_wrap(~ day, ncol=1) +
+  labs(title="The Average Number of Steps Taken") +
+  labs(x="Interval",y="Average Steps")
+
+```
